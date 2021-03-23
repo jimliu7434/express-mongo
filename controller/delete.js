@@ -5,6 +5,7 @@ module.exports = async function (req, res) {
     }
 
     try {
+        // https://mongoosejs.com/docs/api/query.html
         await req.db.Question.deleteMany({}).exec();
         return res.send().status(200);
     } catch (error) {

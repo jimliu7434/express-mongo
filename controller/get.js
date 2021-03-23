@@ -5,6 +5,7 @@ module.exports = async function (req, res) {
     }
 
     try {
+        // https://mongoosejs.com/docs/api/query.html
         const questions = await req.db.Question.find({}).exec();
         return res.json(questions).status(200);
     } catch (error) {
