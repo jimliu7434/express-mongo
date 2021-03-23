@@ -20,7 +20,7 @@ npm init -y
 ## 安裝 Dependency Modules
 
 ```bash
-npm install express mongodb dotenv
+npm install express mongodb dotenv mongoose
 ```
 
 ## Debug

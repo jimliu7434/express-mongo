@@ -1,6 +1,4 @@
 require('dotenv').config();
-//https://docs.mongodb.com/drivers/node/fundamentals/crud/
-const MongoClient = require('mongodb').MongoClient;
 const express = require('express');
 
 const {
@@ -9,16 +7,11 @@ const {
     MONGO_DB,
 } = process.env;
 
-const client = new MongoClient(MONGO_HOST, { useUnifiedTopology: true });
-client.connect(function (err) {
-    if (err) {
-        console.error(err.message);
-        return;
-    }
+const mongo = require('./model/');
+(async () => {
+    const db = await mongo(`${MONGO_HOST}/${MONGO_DB}`);
 
     console.log('MongoDB connected');
-
-    const db = client.db(MONGO_DB);
 
     const app = express();
 
@@ -42,7 +35,7 @@ client.connect(function (err) {
     });
 
 
-    const { 
+    const {
         get: getHandler,
         post: postHandler,
         delete: deleteHandler,
@@ -52,15 +45,13 @@ client.connect(function (err) {
     router.route('/')
         .get(getHandler)
         .post(postHandler)
-        .delete(deleteHandler);
+        .delete(deleteHandler)
+        .put(putHandler);
 
-    router.put('/:a',putHandler);
 
     app.use('/myapp', router);
 
     app.listen(Number(SERVER_WEBPORT), () => {
         console.log(`Listening ${SERVER_WEBPORT}`);
     });
-
-    //client.close();
-});
+})();

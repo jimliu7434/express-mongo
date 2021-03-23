@@ -4,12 +4,9 @@ module.exports = async function (req, res) {
         return;
     }
 
-    // Get the documents collection
-    const collection = req.db.collection('mydocs');
-    // Insert some documents
     try {
-        const result = await collection.find().toArray();
-        return res.json(result).status(200);
+        const questions = await req.db.Question.find({}).exec();
+        return res.json(questions).status(200);
     } catch (error) {
         console.error(error.message);
         res.send({ msg: 'finding failed' }).status(500);
