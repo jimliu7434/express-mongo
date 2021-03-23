@@ -4,6 +4,7 @@ const MongoClient = require('mongodb').MongoClient;
 const express = require('express');
 
 const {
+    SERVER_WEBPORT,
     MONGO_HOST,
     MONGO_DB,
 } = process.env;
@@ -15,7 +16,7 @@ client.connect(function (err) {
         return;
     }
 
-    console.log('Connected successfully to server');
+    console.log('MongoDB connected');
 
     const db = client.db(MONGO_DB);
 
@@ -40,108 +41,26 @@ client.connect(function (err) {
         next();
     });
 
-    router.route('/').get(
-        async function (req, res) {
-            if (!req.db) {
-                res.send({ msg: 'db not found' }).status(500);
-                return;
-            }
 
-            // Get the documents collection
-            const collection = req.db.collection('mydocs');
-            // Insert some documents
-            try {
-                const result = await collection.find().toArray();
-                return res.json(result).status(200);
-            } catch (error) {
-                console.error(error.message);
-                res.send({ msg: 'finding failed' }).status(500);
-                return;
-            }
-        }
-    ).post(
-        async function (req, res) {
-            if (!req.db) {
-                res.send({ msg: 'db not found' }).status(500);
-                return;
-            }
+    const { 
+        get: getHandler,
+        post: postHandler,
+        delete: deleteHandler,
+        put: putHandler,
+    } = require('./controller/');
 
-            if (!req.body || !Array.isArray(req.body)) {
-                res.send({ msg: 'body is not array' }).status(400);
-                return;
-            }
+    router.route('/')
+        .get(getHandler)
+        .post(postHandler)
+        .delete(deleteHandler);
 
-            // Get the documents collection
-            const collection = req.db.collection('mydocs');
-            // Insert some documents
-            try {
-                const result = await collection.insertMany(req.body);
-                return res.json(result).status(200);
-            } catch (error) {
-                console.error(error.message);
-                res.send({ msg: 'inserting failed' }).status(500);
-                return;
-            }
-        }
-    ).delete(
-        async function (req, res) {
-            if (!req.db) {
-                res.send({ msg: 'db not found' }).status(500);
-                return;
-            }
-
-            // Get the documents collection
-            const collection = req.db.collection('mydocs');
-            // Insert some documents
-            try {
-                const result = await collection.deleteMany({
-                    a: {
-                        $gt: 0,
-                    }
-                });
-                return res.json(result).status(200);
-            } catch (error) {
-                console.error(error.message);
-                res.send({ msg: 'deleting failed' }).status(500);
-                return;
-            }
-        }
-    );
-
-    router.put('/:a',
-        async function (req, res) {
-            if (!req.db) {
-                res.send({ msg: 'db not found' }).status(500);
-                return;
-            }
-
-            if (!req.params.a) {
-                res.send({ msg: 'need condition a' }).status(400);
-                return;
-            }
-
-            if (!req.body) {
-                res.send({ msg: 'body is not a object' }).status(400);
-                return;
-            }
-
-            // Get the documents collection
-            const collection = req.db.collection('mydocs');
-            // Insert some documents
-            try {
-                const result = await collection.updateMany({ a: Number(req.params.a) }, { $set: { b: req.body } });
-                return res.json(result).status(200);
-            } catch (error) {
-                console.error(error.message);
-                res.send({ msg: 'updating failed' }).status(500);
-                return;
-            }
-        }
-    );
-
+    router.put('/:a',putHandler);
 
     app.use('/myapp', router);
-    app.listen(5000)
+
+    app.listen(Number(SERVER_WEBPORT), () => {
+        console.log(`Listening ${SERVER_WEBPORT}`);
+    });
 
     //client.close();
 });
