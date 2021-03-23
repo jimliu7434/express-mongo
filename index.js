@@ -1,4 +1,5 @@
 require('dotenv').config();
+//https://docs.mongodb.com/drivers/node/fundamentals/crud/
 const MongoClient = require('mongodb').MongoClient;
 const express = require('express');
 
@@ -32,11 +33,14 @@ client.connect(function (err) {
         next();
     });
 
-    app.get('/find',
-        function (req, res, next) {
-            console.log('calling /find');
-            next();
-        },
+    const router = express.Router();
+    // router + middleware
+    router.use(function (req, res, next) {
+        console.log(`calling [${req.method}] ${req.originalUrl}`);
+        next();
+    });
+
+    router.route('/').get(
         async function (req, res) {
             if (!req.db) {
                 res.send({ msg: 'db not found' }).status(500);
@@ -55,13 +59,7 @@ client.connect(function (err) {
                 return;
             }
         }
-    );
-
-    app.post('/save',
-        function (req, res, next) {
-            console.log('calling /save');
-            next();
-        },
+    ).post(
         async function (req, res) {
             if (!req.db) {
                 res.send({ msg: 'db not found' }).status(500);
@@ -85,8 +83,64 @@ client.connect(function (err) {
                 return;
             }
         }
+    ).delete(
+        async function (req, res) {
+            if (!req.db) {
+                res.send({ msg: 'db not found' }).status(500);
+                return;
+            }
+
+            // Get the documents collection
+            const collection = req.db.collection('mydocs');
+            // Insert some documents
+            try {
+                const result = await collection.deleteMany({
+                    a: {
+                        $gt: 0,
+                    }
+                });
+                return res.json(result).status(200);
+            } catch (error) {
+                console.error(error.message);
+                res.send({ msg: 'deleting failed' }).status(500);
+                return;
+            }
+        }
     );
 
+    router.put('/:a',
+        async function (req, res) {
+            if (!req.db) {
+                res.send({ msg: 'db not found' }).status(500);
+                return;
+            }
+
+            if (!req.params.a) {
+                res.send({ msg: 'need condition a' }).status(400);
+                return;
+            }
+
+            if (!req.body) {
+                res.send({ msg: 'body is not a object' }).status(400);
+                return;
+            }
+
+            // Get the documents collection
+            const collection = req.db.collection('mydocs');
+            // Insert some documents
+            try {
+                const result = await collection.updateMany({ a: Number(req.params.a) }, { $set: { b: req.body } });
+                return res.json(result).status(200);
+            } catch (error) {
+                console.error(error.message);
+                res.send({ msg: 'updating failed' }).status(500);
+                return;
+            }
+        }
+    );
+
+
+    app.use('/myapp', router);
     app.listen(5000)
 
     //client.close();
